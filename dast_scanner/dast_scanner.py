@@ -10,15 +10,19 @@ ADVERTENCIA: Solo para uso en entornos autorizados y laboratorios controlados.
 """
 
 import argparse
+import html
 import json
 import sys
 import datetime
 import requests
-from urllib.parse import urljoin, urlencode
+import urllib3
+from urllib.parse import urljoin
 
-requests.packages.urllib3.disable_warnings()
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 TIMEOUT = 10
+USER_AGENT = "appsec-lab-dast/1.0 (+https://github.com/XxAledoxX/appsec-lab)"
+SEVERITY_ORDER = ["HIGH", "MEDIUM", "LOW", "INFO"]
 XSS_PAYLOADS = [
     "<script>alert('XSS')</script>",
     "<img src=x onerror=alert(1)>",
@@ -66,6 +70,7 @@ class DASTScanner:
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
         self.session.verify = False
+        self.session.headers.update({"User-Agent": USER_AGENT})
         self.findings = []
 
     def _get(self, path, params=None):
@@ -263,6 +268,12 @@ class DASTScanner:
                 )
 
     # ── Ejecución y reporte ───────────────────────────────────────────────────
+    def severity_counts(self):
+        counts = {sev: 0 for sev in SEVERITY_ORDER}
+        for f in self.findings:
+            counts[f.severity] = counts.get(f.severity, 0) + 1
+        return counts
+
     def run(self):
         print(f"[*] DAST Scanner iniciado — target: {self.base_url}")
         print(f"[*] {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
@@ -275,7 +286,9 @@ class DASTScanner:
         self.check_info_disclosure()
         self.check_missing_security_headers()
 
-        print(f"\n[*] Escaneo completado. Hallazgos: {len(self.findings)}")
+        counts = self.severity_counts()
+        summary = "  ".join(f"{sev}: {counts[sev]}" for sev in SEVERITY_ORDER)
+        print(f"\n[*] Escaneo completado. Hallazgos: {len(self.findings)}  ({summary})")
         return self.findings
 
     def save_json(self, path="reports/dast_report.json"):
@@ -283,6 +296,7 @@ class DASTScanner:
             "target": self.base_url,
             "timestamp": datetime.datetime.now().isoformat(),
             "total_findings": len(self.findings),
+            "severity_summary": self.severity_counts(),
             "findings": [f.to_dict() for f in self.findings],
         }
         with open(path, "w") as fp:
@@ -291,23 +305,35 @@ class DASTScanner:
 
     def save_html(self, path="reports/dast_report.html"):
         severity_color = {"HIGH": "#e74c3c", "MEDIUM": "#e67e22", "LOW": "#f1c40f", "INFO": "#3498db"}
+        # SECURITY: los valores de un hallazgo (URL, detalle, evidencia) contienen
+        # payloads controlados por el atacante — p.ej. <script>. Deben escaparse
+        # antes de incrustarse en el HTML del reporte, o el propio reporte sería
+        # vulnerable a XSS al abrirse en el navegador.
+        esc = html.escape
         rows = ""
         for f in self.findings:
             color = severity_color.get(f.severity, "#999")
             rows += f"""
             <tr>
-                <td style="color:{color};font-weight:bold">{f.severity}</td>
-                <td>{f.module}</td>
-                <td style="word-break:break-all">{f.url}</td>
-                <td>{f.detail}</td>
-                <td><code>{f.evidence}</code></td>
+                <td style="color:{color};font-weight:bold">{esc(f.severity)}</td>
+                <td>{esc(f.module)}</td>
+                <td style="word-break:break-all">{esc(f.url)}</td>
+                <td>{esc(f.detail)}</td>
+                <td><code>{esc(f.evidence)}</code></td>
             </tr>"""
 
-        html = f"""<!DOCTYPE html>
+        counts = self.severity_counts()
+        chips = "".join(
+            f'<span class="chip" style="background:{severity_color.get(sev, "#999")}">'
+            f'{sev}: {counts[sev]}</span>'
+            for sev in SEVERITY_ORDER
+        )
+
+        document = f"""<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<title>DAST Report — {self.base_url}</title>
+<title>DAST Report — {esc(self.base_url)}</title>
 <style>
   body {{ font-family: Arial, sans-serif; margin: 40px; background: #f9f9f9; }}
   h1 {{ color: #2c3e50; }}
@@ -315,12 +341,16 @@ class DASTScanner:
   th {{ background: #2c3e50; color: white; padding: 10px; text-align: left; }}
   td {{ padding: 9px 10px; border-bottom: 1px solid #eee; vertical-align: top; }}
   tr:hover {{ background: #f0f0f0; }}
-  .meta {{ color: #666; margin-bottom: 20px; }}
+  .meta {{ color: #666; margin-bottom: 12px; }}
+  .chip {{ display: inline-block; color: white; font-weight: bold; font-size: 0.8em;
+           padding: 3px 10px; border-radius: 12px; margin-right: 6px; }}
+  .chips {{ margin-bottom: 24px; }}
 </style>
 </head>
 <body>
 <h1>Reporte DAST</h1>
-<p class="meta">Target: <strong>{self.base_url}</strong> &nbsp;|&nbsp; Fecha: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} &nbsp;|&nbsp; Hallazgos: <strong>{len(self.findings)}</strong></p>
+<p class="meta">Target: <strong>{esc(self.base_url)}</strong> &nbsp;|&nbsp; Fecha: {datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')} &nbsp;|&nbsp; Hallazgos: <strong>{len(self.findings)}</strong></p>
+<div class="chips">{chips}</div>
 <table>
   <tr><th>Severidad</th><th>Módulo</th><th>URL</th><th>Detalle</th><th>Evidencia</th></tr>
   {rows}
@@ -328,7 +358,7 @@ class DASTScanner:
 </body>
 </html>"""
         with open(path, "w") as fp:
-            fp.write(html)
+            fp.write(document)
         print(f"[*] Reporte HTML guardado: {path}")
 
 
@@ -337,6 +367,12 @@ def main():
     parser.add_argument("--url", required=True, help="URL base del target (ej: http://localhost:5000)")
     parser.add_argument("--json", default="reports/dast_report.json", help="Ruta de salida JSON")
     parser.add_argument("--html", default="reports/dast_report.html", help="Ruta de salida HTML")
+    parser.add_argument(
+        "--fail-on",
+        choices=["none"] + SEVERITY_ORDER,
+        default="none",
+        help="Salir con código != 0 si hay hallazgos de esta severidad o superior (útil en CI)",
+    )
     args = parser.parse_args()
 
     scanner = DASTScanner(args.url)
@@ -344,6 +380,15 @@ def main():
     scanner.save_json(args.json)
     scanner.save_html(args.html)
 
+    if args.fail_on != "none":
+        threshold = SEVERITY_ORDER.index(args.fail_on)
+        counts = scanner.severity_counts()
+        blocking = sum(counts[sev] for sev in SEVERITY_ORDER[: threshold + 1])
+        if blocking:
+            print(f"[!] {blocking} hallazgo(s) con severidad >= {args.fail_on} — fallo de gate.")
+            return 1
+    return 0
+
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

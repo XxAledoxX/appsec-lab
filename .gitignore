@@ -5,5 +5,7 @@ venv/
 .venv/
 reports/dast_report.html
 reports/dast_report.json
+sast/bandit_selfscan.json
+.pytest_cache/
 *.egg-info/
 .DS_Store

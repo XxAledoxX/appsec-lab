@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  test:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+      - name: Run pytest
+        run: pytest tests/ -q
+
+  sast:
+    name: SAST (Bandit)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Bandit
+        run: pip install bandit==1.8.0
+      # No falla el build: VulnShop es vulnerable a propósito. Bandit corre sobre
+      # el scanner (que sí debe estar limpio) e informa sobre VulnShop.
+      - name: Scan DAST scanner (debe estar limpio)
+        run: bandit -r dast_scanner -ll
+      - name: Scan VulnShop (informativo)
+        run: bandit -r vulnshop || true
+
+  dast:
+    name: DAST end-to-end
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Start VulnShop
+        run: |
+          python vulnshop/app.py &
+          for i in $(seq 1 15); do
+            curl -sf http://localhost:5000/ && break
+            sleep 1
+          done
+      - name: Run DAST scanner
+        # VulnShop tiene vulnerabilidades intencionales: esperamos que el scanner
+        # las encuentre. Verificamos que detecta hallazgos HIGH (gate invertido).
+        run: |
+          python dast_scanner/dast_scanner.py --url http://localhost:5000 --fail-on HIGH \
+            && (echo "ERROR: el scanner no detectó los HIGH esperados" && exit 1) \
+            || echo "OK: el scanner detectó las vulnerabilidades intencionales"
+      - name: Upload DAST report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dast-report
+          path: reports/dast_report.*
