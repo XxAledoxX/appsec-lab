@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>VulnShop {% block title %}{% endblock %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 40px auto; padding: 0 20px; background: #f5f5f5; }
+        nav { background: #c0392b; padding: 10px 20px; border-radius: 4px; margin-bottom: 20px; }
+        nav a { color: white; text-decoration: none; margin-right: 15px; }
+        .container { background: white; padding: 20px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        input, textarea { width: 100%; padding: 8px; margin: 6px 0 12px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 3px; }
+        button { background: #c0392b; color: white; padding: 9px 20px; border: none; border-radius: 3px; cursor: pointer; }
+        .warning { background: #fff3cd; border: 1px solid #ffc107; padding: 10px; border-radius: 3px; margin-bottom: 15px; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/">Inicio</a>
+        <a href="/search?q=zapato">Buscar</a>
+        <a href="/comment">Comentar</a>
+        <a href="/login">Login</a>
+        <a href="/profile">Perfil</a>
+        <a href="/newsletter">Newsletter</a>
+    </nav>
+    <div class="container">
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>

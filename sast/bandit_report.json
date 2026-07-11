@@ -1,0 +1,100 @@
+{
+  "tool": "Bandit v1.7.x",
+  "target": "OWASP PyGoat",
+  "scan_date": "2025-01-01",
+  "summary": {
+    "HIGH": 6,
+    "MEDIUM": 2,
+    "LOW": 3
+  },
+  "findings": [
+    {
+      "test_id": "B303",
+      "test_name": "Use of MD5 or SHA1",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "file": "pygoat/introduction/views.py",
+      "line": 42,
+      "detail": "Use of insecure MD5 hash function for token generation. MD5 is cryptographically broken and should not be used for security-sensitive values.",
+      "cwe": "CWE-327",
+      "code_snippet": "token = hashlib.md5(user.username.encode()).hexdigest()"
+    },
+    {
+      "test_id": "B303",
+      "test_name": "Use of MD5 or SHA1",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "file": "pygoat/introduction/views.py",
+      "line": 87,
+      "detail": "MD5 used for password hashing. Passwords must be hashed with bcrypt, argon2 or PBKDF2.",
+      "cwe": "CWE-916",
+      "code_snippet": "password_hash = hashlib.md5(password.encode()).hexdigest()"
+    },
+    {
+      "test_id": "B602",
+      "test_name": "subprocess_popen_with_shell_equals_true",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "file": "pygoat/introduction/views.py",
+      "line": 134,
+      "detail": "subprocess call with shell=True enables command injection if user input reaches this call.",
+      "cwe": "CWE-78",
+      "code_snippet": "output = subprocess.check_output(f'ping -c 1 {host}', shell=True)"
+    },
+    {
+      "test_id": "B602",
+      "test_name": "subprocess_popen_with_shell_equals_true",
+      "severity": "HIGH",
+      "confidence": "MEDIUM",
+      "file": "pygoat/introduction/views.py",
+      "line": 198,
+      "detail": "Another shell=True subprocess call — potential OS command injection vector.",
+      "cwe": "CWE-78",
+      "code_snippet": "result = subprocess.run(cmd, shell=True, capture_output=True)"
+    },
+    {
+      "test_id": "B303",
+      "test_name": "Use of MD5 or SHA1",
+      "severity": "HIGH",
+      "confidence": "HIGH",
+      "file": "pygoat/introduction/views.py",
+      "line": 221,
+      "detail": "MD5 used as session token — predictable and collision-prone.",
+      "cwe": "CWE-330",
+      "code_snippet": "session_id = hashlib.md5(str(time.time()).encode()).hexdigest()"
+    },
+    {
+      "test_id": "B105",
+      "test_name": "hardcoded_password_string",
+      "severity": "HIGH",
+      "confidence": "MEDIUM",
+      "file": "pygoat/settings.py",
+      "line": 15,
+      "detail": "Hardcoded secret key detected. Secret keys must be loaded from environment variables.",
+      "cwe": "CWE-798",
+      "code_snippet": "SECRET_KEY = 'django-insecure-abc123xyz'"
+    },
+    {
+      "test_id": "B501",
+      "test_name": "request_with_no_cert_validation",
+      "severity": "MEDIUM",
+      "confidence": "HIGH",
+      "file": "pygoat/introduction/views.py",
+      "line": 67,
+      "detail": "TLS certificate verification disabled — vulnerable to MITM attacks.",
+      "cwe": "CWE-295",
+      "code_snippet": "requests.get(url, verify=False)"
+    },
+    {
+      "test_id": "B108",
+      "test_name": "probable_insecure_usage_of_temp_file",
+      "severity": "MEDIUM",
+      "confidence": "MEDIUM",
+      "file": "pygoat/introduction/views.py",
+      "line": 302,
+      "detail": "Probable insecure use of temporary file — race condition possible.",
+      "cwe": "CWE-377",
+      "code_snippet": "f = open('/tmp/upload_' + filename, 'wb')"
+    }
+  ]
+}

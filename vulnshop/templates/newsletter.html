@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}— Newsletter{% endblock %}
+{% block content %}
+<h2>Suscripción al Newsletter</h2>
+<form method="post" action="/newsletter">
+    <label>Email:</label>
+    <input type="email" name="email" placeholder="tu@email.com">
+    <label>Idioma preferido (código):</label>
+    <input type="text" name="lang" placeholder="es" value="es">
+    <button type="submit">Suscribirme</button>
+</form>
+{% if message %}
+<p>{{ message }}</p>
+{% endif %}
+<!-- VULN: campo lang se inyecta sin sanitizar en el header Content-Language -->
+<!-- Probar: lang = "es\r\nX-Injected: pwned" -->
+{% endblock %}

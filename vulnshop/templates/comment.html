@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% block title %}— Comentarios{% endblock %}
+{% block content %}
+<h2>Dejar un comentario</h2>
+<form method="post" action="/comment">
+    <label>Nombre:</label>
+    <input type="text" name="name" placeholder="Tu nombre">
+    <label>Comentario:</label>
+    <textarea name="message" rows="4" placeholder="Tu comentario..."></textarea>
+    <button type="submit">Enviar</button>
+</form>
+{% if result %}
+<hr>
+<h3>Comentario de: {{ result.name }}</h3>
+<p>{{ result.message }}</p>
+<!-- VULN: name y message se renderizan sin escapar via Markup() en app.py -->
+{% endif %}
+{% endblock %}

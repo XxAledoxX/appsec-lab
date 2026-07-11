@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+{% block title %}— Redirect{% endblock %}
+{% block content %}
+<h2>Redirigiendo...</h2>
+<p>Serás redirigido en breve.</p>
+<!-- VULN: /redirect?url= acepta cualquier URL sin validar dominio -->
+{% endblock %}

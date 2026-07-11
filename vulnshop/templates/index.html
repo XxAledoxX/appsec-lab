@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}— Tienda{% endblock %}
+{% block content %}
+<div class="warning">
+    ⚠️ <strong>Entorno de laboratorio.</strong> Esta aplicación contiene vulnerabilidades intencionales para prácticas de seguridad. No usar en producción.
+</div>
+<h1>Bienvenido a VulnShop</h1>
+<p>Tienda de demostración con vulnerabilidades OWASP Top 10 integradas intencionalmente.</p>
+<ul>
+    <li><a href="/search?q=zapato">Buscar productos</a> — XSS Reflected (GET)</li>
+    <li><a href="/comment">Dejar comentario</a> — XSS Reflected (POST)</li>
+    <li><a href="/login">Login</a> — CRLF Injection en headers</li>
+    <li><a href="/redirect?url=https://evil.com">Redirect externo</a> — Open Redirect</li>
+    <li><a href="/profile">Perfil</a> — Insecure Cookie</li>
+    <li><a href="/newsletter">Newsletter</a> — Header Injection</li>
+</ul>
+{% endblock %}

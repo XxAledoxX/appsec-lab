@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}— Perfil{% endblock %}
+{% block content %}
+<h2>Perfil de usuario</h2>
+<p>Bienvenido, <strong>{{ user }}</strong>.</p>
+<p>Tu sesión está activa.</p>
+<!-- VULN: Cookie session_user sin flags HttpOnly, Secure ni SameSite -->
+<!-- Visible en DevTools > Application > Cookies -->
+{% endblock %}

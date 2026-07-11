@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block title %}— Login{% endblock %}
+{% block content %}
+<h2>Iniciar sesión</h2>
+<form method="post" action="/login">
+    <label>Usuario:</label>
+    <input type="text" name="username" placeholder="usuario">
+    <label>Contraseña:</label>
+    <input type="password" name="password" placeholder="contraseña">
+    <button type="submit">Entrar</button>
+</form>
+<!-- VULN: el campo username se inyecta sin sanitizar en el header X-Logged-User -->
+<!-- Probar: usuario = "admin\r\nX-Injected: pwned" -->
+{% endblock %}

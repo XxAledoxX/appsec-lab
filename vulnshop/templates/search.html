@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block title %}— Búsqueda{% endblock %}
+{% block content %}
+<h2>Buscar productos</h2>
+<form method="get" action="/search">
+    <input type="text" name="q" value="{{ query }}" placeholder="Buscar...">
+    <button type="submit">Buscar</button>
+</form>
+{% if query %}
+<p>Resultados para: {{ query }}</p>
+{% endif %}
+<!-- VULN: query se renderiza sin escapar via Markup() en app.py -->
+{% endblock %}
