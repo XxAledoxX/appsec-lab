@@ -19,6 +19,16 @@ make scan        # (en otra terminal) lanza el DAST scanner contra VulnShop
 make test        # ejecuta la suite de pytest
 ```
 
+<p align="center">
+  <img src="docs/screenshots/vulnshop-home.png" width="410" alt="VulnShop — página de inicio"><br>
+  <sub>VulnShop — home con el catálogo de vulnerabilidades del lab</sub>
+</p>
+<p align="center">
+  <img src="docs/screenshots/vulnshop-search-xss.png" width="410" alt="XSS reflejado ejecutándose en /search">
+  <img src="docs/screenshots/dast-report.png" width="410" alt="Reporte HTML generado por el DAST scanner"><br>
+  <sub>Izquierda: payload XSS reflejado sin escapar en <code>/search</code>. Derecha: reporte HTML del DAST scanner.</sub>
+</p>
+
 ---
 
 ## Contenido
@@ -37,7 +47,8 @@ appsec-lab/
 ├── sast/
 │   └── bandit_report.json
 ├── reports/
-│   └── findings_summary.md
+│   ├── findings_summary.md
+│   └── writeups/        # Informe detallado por vulnerabilidad (estilo pentest)
 ├── Makefile
 └── requirements.txt / requirements-dev.txt
 ```
@@ -46,16 +57,17 @@ appsec-lab/
 
 ## VulnShop — Vulnerabilidades implementadas
 
-| Ruta | Vulnerabilidad | CWE |
-|------|---------------|-----|
-| `GET /search?q=` | XSS Reflected | CWE-79 |
-| `POST /comment` | XSS Reflected (POST) | CWE-79 |
-| `POST /login` | CRLF / Header Injection | CWE-113 |
-| `GET /redirect?url=` | Open Redirect + CRLF | CWE-601 |
-| `POST /newsletter` | Header Injection | CWE-113 |
-| `GET /profile` | Insecure Cookie | CWE-614 |
-| Todas las rutas | Information Disclosure | CWE-200 |
-| Todas las rutas | Missing Security Headers | CWE-693 |
+| Ruta | Vulnerabilidad | CWE | Writeup |
+|------|---------------|-----|---------|
+| `GET /search?q=` | XSS Reflected (GET) | CWE-79 | [detalle](reports/writeups/01-xss-reflected-search.md) |
+| `POST /comment` | XSS Reflected (POST) | CWE-79 | [detalle](reports/writeups/02-xss-reflected-comment.md) |
+| `POST /login`, `POST /newsletter` | CRLF / Header Injection | CWE-113 | [detalle](reports/writeups/03-crlf-header-injection.md) |
+| `GET /redirect?url=` | Open Redirect | CWE-601 | [detalle](reports/writeups/04-open-redirect.md) |
+| `GET /profile` | Insecure Cookie | CWE-614 | [detalle](reports/writeups/05-insecure-cookies.md) |
+| Todas las rutas | Information Disclosure | CWE-200 | [detalle](reports/writeups/06-information-disclosure.md) |
+| Todas las rutas | Missing Security Headers | CWE-693 | [detalle](reports/writeups/07-missing-security-headers.md) |
+
+Cada writeup sigue formato de informe de pentest: severidad, CWE/OWASP, impacto, PoC (request/response real), causa raíz en el código y remediación.
 
 ### Levantar VulnShop
 
@@ -153,6 +165,19 @@ Análisis realizado sobre **OWASP PyGoat** como objetivo de práctica.
 | B105 | CWE-798 | Clave secreta hardcodeada en código fuente |
 
 Ver reporte completo: [`sast/bandit_report.json`](sast/bandit_report.json)
+
+---
+
+## Regenerar las capturas del README
+
+Las imágenes de `docs/screenshots/` se generan con Playwright (Chromium headless):
+
+```bash
+pip install playwright && playwright install chromium
+python vulnshop/app.py &                                    # levantar VulnShop
+python dast_scanner/dast_scanner.py --url http://localhost:5000  # generar reports/dast_report.html
+python scripts/capture_screenshots.py                        # captura las 3 imágenes
+```
 
 ---
 

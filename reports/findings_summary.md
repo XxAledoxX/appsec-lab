@@ -46,3 +46,15 @@
 2. Despliegue local de VulnShop en entorno controlado
 3. DAST black-box con scanner propio para validar las vulnerabilidades en runtime
 4. Verificación manual de hallazgos con herramientas especializadas (Wapiti3, ZAP)
+
+### Writeups detallados
+
+Cada hallazgo de VulnShop tiene un informe individual en [`reports/writeups/`](writeups/), con PoC (request/response), causa raíz en el código y remediación:
+
+- [XSS Reflected (GET) — `/search`](writeups/01-xss-reflected-search.md)
+- [XSS Reflected (POST) — `/comment`](writeups/02-xss-reflected-comment.md)
+- [CRLF / Header Injection — `/login`, `/newsletter`](writeups/03-crlf-header-injection.md)
+- [Open Redirect — `/redirect`](writeups/04-open-redirect.md)
+- [Insecure Cookie — `/profile`](writeups/05-insecure-cookies.md)
+- [Information Disclosure](writeups/06-information-disclosure.md)
+- [Missing Security Headers](writeups/07-missing-security-headers.md)
